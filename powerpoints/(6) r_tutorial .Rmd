@@ -1,0 +1,114 @@
+---
+title: "R Tutorial"
+date: "11/16/2023"
+output: pdf_document
+---
+
+# This is a header 
+## Subheader 1 
+### Subheader 2   
+
+```{r}
+
+```
+
+
+```{r}
+#load packages 
+library(tidyverse)
+library(stargazer)
+library(tinytex)
+
+#load dataset    
+whr2015 <- read_csv("~/Downloads/OneDrive - The University of Chicago/Documents/Fall 2023/Oeconomica Econometrics/WHR2015.csv") 
+
+whr2015 <- read_csv("~/Downloads/OneDrive - The University of Chicago/Documents/Fall 2023/Oeconomica Econometrics/WHR2015.csv")
+```
+
+Shortcut to insert a code chunk is CTRL + ALT + i (Windows) or CTRL + Option + i on Mac. 
+
+# Summary 
+```{r}
+summary(whr2015$`Economy (GDP per Capita)`)
+```
+
+
+#Filter and mutate wihtout pipes 
+```{r}
+filter(whr2015, Region == "Eastern Asia" | Region == "North America")
+
+mutate(whr2015, hap_hle = `Happiness Score`*`Health (Life Expectancy)`)
+```
+# Pipes 
+In RStudio the keyboard shortcut for the pipe operator %>% is Ctrl + Shift + M (Windows) or Cmd + Shift + M (Mac)      
+```{r}
+
+whr2015 %>% 
+  group_by(Region) %>% 
+  summarise(mean_gdp = median(`Economy (GDP per Capita)`))
+
+
+
+#whr2015 %>% 
+  #filter(Region == "Eastern Asia"|Region == "North America") %>% 
+  #mutate(hap_hle = `Happiness Score`*`Health (Life Expectancy)`) %>% 
+  #group_by(Country) %>% 
+  #summarise(mean_gdp = mean(`Economy (GDP per Capita)`))
+
+
+
+```
+```{r}
+#filter out missing values 
+whr_cleaned <- whr2015 %>% 
+  filter(!is.na(Region)) %>% 
+  head(15)   
+```
+
+# Run Simple Regression Model 
+```{r, results='asis'}
+#creating a simple regression 
+
+model1 <- lm(`Economy (GDP per Capita)` ~ `Health (Life Expectancy)`, data = whr2015)  
+
+model2 <-  lm(`Economy (GDP per Capita)` ~ `Health (Life Expectancy)` + `Trust (Government Corruption)`, data = whr2015)  
+
+#Printing regression table with stargazer 
+stargazer(model1, model2, dep.var.labels = "GDP per capita", covariate.labels = c("Health", "Trust"), title = "Regression Example")
+
+```
+# Saving a dataset 
+```{r}
+write_csv(whr_cleaned, "~/Downloads/OneDrive - The University of Chicago/Documents/Fall 2023/Oeconomica Econometrics/whr2015new.csv")
+```
+
+
+# Practice 
+
+# 1. What is the relationship between happiness score and health? Run a regression with happiness score as the independent variable and health as the dependent variable. 
+# 2. Suppose you discover that freedom impacts both health and happiness score. Run a new regression with freedom as control. 
+# 3. Add the dependent variable label to be "Life Expectancy as a measure of health." 
+# 4. Knit the document to make sure your regression table shows. 
+
+
+```{r, results='asis'}
+hap_sc_health <- lm(`Health (Life Expectancy)` ~ `Happiness Score`, data = whr2015)
+
+controlled_health <- lm(`Health (Life Expectancy)` ~ `Happiness Score` + Freedom, data = whr2015) 
+
+stargazer(hap_sc_health, controlled_health, dep.var.labels = "Life Expectancy as a measure of health")
+```
+
+# Plots and graphs 
+
+```{r}
+whr2015 %>% 
+  ggplot(mapping = aes(x = `Happiness Rank`, y = `Economy (GDP per Capita)`)) +
+  geom_line() 
+```
+
+
+
+
+
+
