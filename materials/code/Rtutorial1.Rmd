@@ -1,0 +1,265 @@
+---
+title: "R Tutorial 2"
+date: "12/25/2023"
+output: pdf_document
+---
+```{r}
+# Clear the environment
+rm(list = ls())
+
+#load packages 
+require(tidyverse)
+require(ggplot2)
+require(stargazer)
+
+# set directory
+root <- "/Users/georgianaliang/Documents/GitHub/intro_to_econometrics/materials"
+rawdir <- paste0(root, "/data")
+
+#load dataset    
+data <- read.csv(paste0(rawdir, "/TNeduc_cleaned.csv"))
+glimpse(data)
+```
+## Useful Tidyverse Operations
+
+```{r}
+# filter
+data %>% filter(Year == "2012")
+```
+
+```{r}
+# filter by more than 1 conditions
+data %>% filter(Year == "2012" & enroll_ftug < 200)
+data %>% filter(Year == "2012" | enroll_ftug < 200)
+data %>% filter(Year == "2012" & !(enroll_ftug < 200))
+```
+See the difference between "and" <&>, "or" <|>. Also the effect of "not" <!>.
+
+```{r}
+# mutate
+data %>% mutate(grant_total = grant_federal + grant_state)
+```
+
+```{r}
+# rename
+data %>% rename(bach = degree_bach)
+```
+
+```{r}
+# select
+data %>% select(public:grant_state)
+```
+
+```{r}
+# group_by and summarise
+data %>% group_by(ID_IPEDS) %>%
+  summarise(n = n(),
+            avg_grant_federal = mean(grant_federal),
+            avg_grant_state = mean(grant_state))
+```
+
+```{r}
+# slice_
+data %>% group_by(ID_IPEDS) %>%
+  slice_max(grant_federal, n = 1)
+```
+
+```{r}
+# rbind
+data1 <- data %>% filter(Year == "2011")
+data2 <- data %>% filter(Year == "2015")
+data0 <- rbind(data1, data2)
+glimpse(data0)
+```
+
+```{r, warning=FALSE}
+# merge & join
+data1 <- data %>% select(X:ID_IPEDS)
+data2 <- data %>% select(ID_IPEDS:grant_state)
+data0 <- merge(data1, data2, by = "ID_IPEDS")
+glimpse(data0)
+data00 <- inner_join(data1, data2, by = "ID_IPEDS")
+glimpse(data00)
+```
+
+### Practice:
+1. What is the mean total grant for public universities with 4 years or above?
+2. What is the median ratio between federal and state grants for colleges with ftug less than 200?
+3.* What is mean difference between grant at federal level for years 2011 and 2015
+
+## Summary Stats
+```{r, warning=FALSE, echo = FALSE, message = FALSE, echo = FALSE}
+# non weighted summary stats
+data %>%
+  group_by(degree_bach, public) %>%
+  summarise(
+    min = min(grant_state),
+    p10 = quantile(grant_state, probs = .1),
+    p25 = quantile(grant_state, probs = .25),
+    median = median(grant_state),
+    p75 = quantile(grant_state, probs = .75),
+    p90 = quantile(grant_state, probs = .9),
+    max = max(grant_state),
+    mean = mean(grant_state),
+    CV = sd(grant_state)/mean(grant_state)
+  )
+```
+
+```{r, warning=FALSE, echo = FALSE, message = FALSE, echo = FALSE}
+require(TAM)
+# weighted by ftug
+data %>%
+  group_by(degree_bach, public) %>%
+  summarise(
+    min = min(grant_state),
+    p10 = weighted_quantile(grant_state, probs = .1, w = enroll_ftug),
+    p25 = weighted_quantile(grant_state, probs = .25, w = enroll_ftug),
+    median = weighted_quantile(grant_state, probs = .5, w = enroll_ftug),
+    p75 = weighted_quantile(grant_state, probs = .75, w = enroll_ftug),
+    p90 = weighted_quantile(grant_state, probs = .9, w = enroll_ftug),
+    max = max(grant_state),
+    mean = weighted.mean(grant_state, w = enroll_ftug/1000),
+    CV = weighted_sd(grant_state, w = enroll_ftug/1000)/weighted_mean(grant_state, w = enroll_ftug/1000)
+  )
+
+```
+
+```{r}
+# correlation
+cor(data$grant_federal, data$grant_state)
+# weighted correlation
+wtd.cors(data$grant_federal, data$grant_state, weight = data$enroll_ftug)
+```
+
+### Practice:
+1. Produce a new variable that groups the colleges by number of first year first time undergraduates (ftug) enrolled in bins of 100, 200, 500, 10000, 20000, 50000. Produce a summary table for total grants at each bin level. What can you conclude about the relationship between school size (approximated by ftug number) and average grant? What about grant level variance?
+
+## Plotting with ggplot2
+```{r}
+# basic plot
+ggplot(data, aes(grant_state, grant_federal)) + geom_point()
+```
+```{r}
+# varying the dots
+ggplot(data, aes(grant_state, grant_federal, color = as.factor(public))) + geom_point()
+ggplot(data, aes(grant_state, grant_federal, shape = as.factor(public))) + geom_point()
+ggplot(data, aes(grant_state, grant_federal, size = enroll_ftug)) + geom_point()
+```
+
+
+```{r}
+# group to different panels
+ggplot(data, aes(grant_state, grant_federal)) + 
+  geom_point() + 
+  facet_wrap(~public+degree_bach)
+```
+```{r}
+# add a smoothed curve
+ggplot(data, aes(grant_state, grant_federal)) + 
+  geom_point() + geom_smooth()
+# add a linear line
+ggplot(data, aes(grant_state, grant_federal)) + 
+  geom_point() + geom_smooth(method = "lm")
+```
+```{r, , warning=FALSE}
+# an alternate scatter plot using binsreg that is highly useful for studying relationships when the level of crowing of points makes it hard to think
+require(binsreg)
+result <- binsreg(x = data$grant_state, y = data$grant_federal)
+  plot_data <- ((result$data.plot)$`Group Full Sample`)$data.dots
+  p <- ggplot(aes(x = x, y = fit), data = plot_data) + geom_point() + geom_smooth(method= "lm")
+```
+```{r}
+# add random noise for easier observation
+ggplot(data, aes(as.factor(public), grant_federal)) + geom_jitter()
+```
+
+```{r}
+# box plot
+ggplot(data, aes(as.factor(public), grant_federal)) + geom_boxplot()
+```
+```{r, warning = FALSE, echo = FALSE, message = FALSE, echo = FALSE}
+# histogram
+ggplot(data, aes(grant_federal)) + geom_histogram()
+# taking the log for clarity
+ggplot(data, aes(log(grant_federal))) + geom_histogram()
+```
+```{r}
+# bar chart
+ggplot(data, aes(public)) + geom_bar()
+```
+```{r, warning=FALSE}
+# some other features (try changing the different elements below)
+  p <- ggplot(data, aes(grant_state, grant_federal, color = as.factor(public))) + geom_point() +
+    scale_color_manual(name = "public/private", 
+    labels = c("private", "public"), values = c("red", "green")) + 
+    ylab("federal grant") + xlab("state_grant") + ggtitle("federal by state level grant") +
+    xlim(c(10^5, 10^7)) + ylim(c(10^5, 6*10^6))
+  p
+
+```
+```{r, echo = FALSE, message = FALSE, echo = FALSE, result = 'hide'}
+# store the figure above
+figdir <- paste0(root, "/figure")
+ggsave(paste0(figdir, "/plot.png"), p, width = 5, height = 5)
+# an alternate way of saving
+output_file <- paste0(figdir, "/plot2.png")
+png(output_file)
+print(p)
+dev.off()
+```
+### Practice:
+1. *Create a few plots to analyze the distribution of grants by enrollment number through the years. What can you observe?
+
+## running linear regressions
+```{r}
+data <- data %>% mutate(avg_grant = (grant_federal + grant_state)/enroll_ftug) %>% 
+  mutate(lag_avg_grant = lag(avg_grant, n=1))
+# how does enrollment change with avg grant amount
+model1 <- lm(enroll_ftug ~ lag_avg_grant, data = data)
+# control by public/private
+model2 <- lm(enroll_ftug ~ lag_avg_grant + public, data = data)
+# control by public/private +2/4 year (note the interaction)
+model3 <- lm(enroll_ftug ~ lag_avg_grant + public + degree_bach + public * degree_bach, data = data)
+# control by public/private +2/4 year (note the interaction) + year fixed effect
+model4 <- lm(enroll_ftug ~ lag_avg_grant + public + degree_bach + public * degree_bach + as.factor(Year), data = data)
+
+# report the information
+stargazer(model1, model2, model3, model4, type = "text",
+          title = "enrollment number by perivous year avg grant amount", 
+          table.placement = 'H')
+
+```
+
+## reporting the information into latex
+An efficient way to produce latex documents is to keep an organized local folder of tables and figures that we can import directly into latex. We can then compile the latex file directly without needing modify the file each time we update a specific table/graph. A great app I can recommend for this is TeXstudio.
+```{r, message = FALSE}
+# turn a table to latex
+require(xtable)
+tabdir <- paste0(root, "/tab")
+
+# everything is reduced by 1000 times to save column space
+summary_stats <- data %>%
+  group_by(degree_bach, public) %>% mutate(grant_state = grant_state/1000) %>%
+  summarise(
+    min = min(grant_state),
+    p10 = weighted_quantile(grant_state, probs = .1, w = enroll_ftug),
+    p25 = weighted_quantile(grant_state, probs = .25, w = enroll_ftug),
+    median = weighted_quantile(grant_state, probs = .5, w = enroll_ftug),
+    p75 = weighted_quantile(grant_state, probs = .75, w = enroll_ftug),
+    p90 = weighted_quantile(grant_state, probs = .9, w = enroll_ftug),
+    max = max(grant_state),
+    mean = weighted.mean(grant_state, w = enroll_ftug/1000),
+    CV = weighted_sd(grant_state, w = enroll_ftug/1000)/weighted_mean(grant_state, w = enroll_ftug/1000)
+  )
+my_table <- xtable(summary_stats, digits = 2)
+print.xtable(my_table, only.contents = TRUE, file = paste0(tabdir, "/tab1.tex"), include.rownames = FALSE)
+```
+
+```{r, echo=FALSE,results='hide', warning=FALSE}
+# save a linear regression table
+stargazer(model1, model2, model3, model4, out = paste0(tabdir, "/tab2.tex"),
+          title = "enrollment number by perivous year avg grant amount", 
+          table.placement = 'H', omit.stat = c("f", "ser"))
+```
+### Practice:
+1. *Make a nice report of what you found in this tutorial using latex.

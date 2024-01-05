@@ -1,0 +1,131 @@
+%
+\documentclass[12pt,notitlepage]{article}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{yhmath}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{pdflscape}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{dsfont}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usepackage{marvosym}
+\usepackage{multirow}
+\usepackage{pdflscape}
+\usepackage[hyphenbreaks]{breakurl}
+\usepackage[hyphens]{url}
+\usepackage{setspace}
+\usepackage{epigraph}
+\usepackage{bm}
+\usepackage{textcomp}
+\usepackage{diagbox}
+\usepackage{bbm}
+\usepackage{verbatim}
+\usepackage[framemethod=tikz]{mdframed}
+\usepackage{subcaption}
+\usepackage{caption}
+\usepackage{lipsum}
+\usepackage{longtable}
+\usepackage[shortlabels]{enumitem}
+\setlength{\epigraphrule}{0pt}
+\setlength\parindent{0pt}
+\renewcommand{\baselinestretch}{1.25}
+\usepackage{geometry}
+
+\setcounter{MaxMatrixCols}{10}
+
+\newcolumntype{L}[1]{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\usepackage{natbib,hyperref}
+\bibliographystyle{chicago}  
+
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ll}{\mathrm{L}}
+\renewcommand{\L}{\mathbb{L}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\Cov}{\mathrm{Cov}}
+\newcommand{\Corr}{\mathrm{Corr}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\supp}{\mathrm{supp}}
+\newcommand{\notimplies}{\mathrel{{\ooalign{\hidewidth$\not\phantom{=}$\hidewidth\cr$\implies$}}}}
+\newcommand{\var}{\mathrm{var}}
+\newcommand{\cov}{\mathrm{cov}}
+\newcommand{\corr}{\mathrm{corr}}
+
+\topmargin=-1.5cm \textheight=23cm \oddsidemargin=0.5cm
+\evensidemargin=0.5cm \textwidth=15.5cm
+\newtheorem{ass}{Assumption}
+\newtheorem{definit}{Definition}
+\newtheorem{prop}{Proposition}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}{Lemma}
+\newtheorem{conj}{Conjecture}
+\newtheorem{cor}{Corollary}
+\newtheorem{rem}{Remark}
+\renewcommand{\thesubsection}{\arabic{section}.\arabic{subsection}}
+\renewcommand{\thesubsubsection}{\arabic{section}.\arabic{subsection}.\arabic{subsubsection}}
+
+\newcommand\independent{\protect\mathpalette{\protect\independenT}{\perp}}
+\def\independenT#1#2{\mathrel{\rlap{$#1#2$}\mkern2mu{#1#2}}}
+
+\usepackage{epsfig,hyperref}
+
+\hypersetup{
+	pdftitle={ECON 21030 Template Latex Code},    % title
+	pdfauthor={Francesco Ruggieri},     % author
+	pdfnewwindow=true,      % links in new window
+	colorlinks=true,       % false: boxed links; true: colored links
+	linkcolor=blue,          % color of internal links
+	citecolor=red,        % color of links to bibliography
+	filecolor=black,      % color of file links
+	urlcolor=blue           % color of external links
+}
+
+\allowdisplaybreaks
+
+\title{Latex template} 
+\begin{document}
+	\maketitle
+	
+	\tableofcontents
+	
+	\section{Section} 
+	This is a section.
+	
+	\subsection{Subsection}
+	This is a subsection
+	
+	\section{Table}
+
+	\begin{table}[H]
+		\setlength{\tabcolsep}{3pt}
+			\caption{Sample table} 
+			\begin{tabular}{@{}  ccccccccccc}
+				\input{../tab/tab1.tex}
+			\end{tabular}
+	\end{table}
+	
+	
+	\section{Regression table}
+	\input{../tab/tab2.tex}
+	
+
+	\section{Graphs}
+	This is a sample plot.
+	
+	\begin{figure}[H]
+		\centering
+		\includegraphics[width=\textwidth]{../figure/plot.png}
+		\caption{Plot}
+	\end{figure}
+
+
+	
+	
+\end{document}
